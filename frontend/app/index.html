@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="icon" href="favicon.ico">
+  <link rel="stylesheet" href="styles/app.less"/>
+  <title>BPMN Choreography Editor</title>
+</head>
+<body>
+  <div class="content">
+    <div id="canvas"></div>
+    <div id="properties-panel" class="side-panel hidden"></div>
+  </div>
+
+  <div class="buttons djs-container">
+    <button id="js-open-file" class="icon-folder" title="Open BPMN file"></button>
+    <div class="divider"></div>
+    <a id="js-download-diagram" class="icon-file-code" title="Download BPMN XML"></a>
+    <a id="js-download-svg" class="icon-file-image" title="Download SVG"></a>
+    <div class="divider"></div>
+    <div class="divider"></div>
+    <button id="js-generate-chaincode" class="icon-play" title="Generate Chaincode"></button>
+  </div>
+
+  <div id="meta-modal" class="meta-modal hidden">
+    <div class="meta-modal-content">
+      <h3>Message Schema</h3>
+      <h4>Variables</h4>
+      <div id="meta-fields"></div>
+      <button id="meta-add-field">Add Variable</button>
+      <details>
+        <summary>Raw JSON Schema</summary>
+        <pre id="meta-preview"></pre>
+      </details>
+      <div style="margin-top:15px; text-align:right;">
+        <button id="meta-cancel">Cancel</button>
+        <button id="meta-save">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="msp-modal" class="meta-modal hidden">
+    <div class="meta-modal-content">
+      <h3>Map Participants to MSP IDs</h3>
+      <p style="color: #666; font-size: 14px; margin-bottom: 15px;">
+        Assign Fabric organization to each BPMN participant:
+      </p>
+      <div id="msp-fields"></div>
+      <div style="margin-top: 15px; text-align: right;">
+        <button id="msp-cancel">Cancel</button>
+        <button id="msp-generate" style="background: #28a745; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer;">Generate</button>
+      </div>
+      <div id="msp-status"></div>
+    </div>
+  </div>
+
+  <input id="file-input" type="file" accept=".bpmn,.xml" />
+
+  <script src="./app.js"></script>
+</body>
+</html>

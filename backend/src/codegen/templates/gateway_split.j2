@@ -1,0 +1,42 @@
+func (cc *SmartContract) {{ gateway_id }}(ctx contractapi.TransactionContextInterface, instanceID string) error {
+	inst, err := cc.getInstance(ctx, instanceID)
+	if err != nil {
+		return fmt.Errorf("failed to load instance: %v", err)
+	}
+
+	gw, ok := inst.Gateways["{{ gateway_id }}"]
+	if !ok {
+		return fmt.Errorf("gateway {{ gateway_id }} not found in instance")
+	}
+
+	if gw.State != ENABLED {
+		return fmt.Errorf("gateway {{ gateway_id }} is not enabled (current state: %v)", gw.State)
+	}
+
+	gw.State = COMPLETED
+	inst.Gateways["{{ gateway_id }}"] = gw
+
+{% if gateway_type == "ExclusiveGateway" %}
+{% for branch in branches %}
+	if {{ branch.condition }} {
+{{ branch.activation_code | indent(8) }}
+	}
+{% endfor %}
+
+{% elif gateway_type == "ParallelGateway" %}
+{% for branch in branches %}
+{{ branch.activation_code }}
+{% endfor %}
+
+{% elif gateway_type == "EventBasedGateway" %}
+{% for branch in branches %}
+{{ branch.activation_code | indent(4) }}
+{% endfor %}
+{% endif %}
+
+	ctx.GetStub().SetEvent("{{ gateway_id }}_executed:"+instanceID, []byte("Gateway executed"))
+
+{{ next_hook }}
+
+	return cc.putInstance(ctx, inst)
+}

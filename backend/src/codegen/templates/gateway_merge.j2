@@ -1,0 +1,29 @@
+func (cc *SmartContract) {{ gateway_id }}(ctx contractapi.TransactionContextInterface, instanceID string) error {
+	inst, err := cc.getInstance(ctx, instanceID)
+	if err != nil {
+		return fmt.Errorf("failed to load instance: %v", err)
+	}
+
+	gw, ok := inst.Gateways["{{ gateway_id }}"]
+	if !ok {
+		return fmt.Errorf("gateway {{ gateway_id }} not found in instance")
+	}
+
+	if gw.State != ENABLED {
+		return fmt.Errorf("gateway {{ gateway_id }} is not enabled (current state: %v)", gw.State)
+	}
+
+{% if incoming_count > 1 %}
+{% endif %}
+
+	gw.State = COMPLETED
+	inst.Gateways["{{ gateway_id }}"] = gw
+
+	ctx.GetStub().SetEvent("{{ gateway_id }}_executed:"+instanceID, []byte("Gateway executed"))
+
+{{ next_state_code }}
+
+{{ next_hook }}
+
+	return cc.putInstance(ctx, inst)
+}

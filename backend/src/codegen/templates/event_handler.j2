@@ -1,0 +1,26 @@
+func (cc *SmartContract) {{ event_id }}(ctx contractapi.TransactionContextInterface, instanceID string) error {
+	inst, err := cc.getInstance(ctx, instanceID)
+	if err != nil {
+		return fmt.Errorf("failed to load instance: %v", err)
+	}
+
+	event, ok := inst.Events["{{ event_id }}"]
+	if !ok {
+		return fmt.Errorf("event {{ event_id }} not found in instance")
+	}
+
+	if event.State != ENABLED {
+		return fmt.Errorf("event {{ event_id }} is not enabled (current state: %v)", event.State)
+	}
+
+	event.State = COMPLETED
+	inst.Events["{{ event_id }}"] = event
+
+	ctx.GetStub().SetEvent("{{ event_id }}_executed:"+instanceID, []byte("Event executed"))
+
+{{ next_state_code }}
+
+{{ next_hook }}
+
+	return cc.putInstance(ctx, inst)
+}

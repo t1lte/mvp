@@ -1,0 +1,684 @@
+@import url("../../node_modules/chor-js/assets/styles/chor-js.css");
+@import url("../icons/css/chor-editor.css");
+@import url("../../node_modules/bpmn-js-properties-panel/dist/assets/bpmn-js-properties-panel.css");
+
+* {
+  box-sizing: border-box;
+}
+
+body,
+html {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: rgb(51, 51, 51);
+  font-size: 12px;
+  height: 100%;
+  max-height: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+div#panel-toggle {
+  flex-shrink: 0;
+  width: 20px;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #FAFAFA;
+  border-left: solid 1px #CCC;
+
+  & > div {
+    height: 95px;
+    width: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-bottom: solid 1px #CCC;
+    cursor: pointer;
+
+    &:first-child {
+      border-top: solid 1px #CCC;
+    }
+
+    & > span {
+      font-size: 11px;
+      transform: rotate(-90deg);
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    &.active {
+      border-left: 2px solid #4d90ff;
+    }
+
+    &:hover {
+      background-color: #eee;
+    }
+  }
+}
+
+.side-panel {
+  background-color: #FAFAFA;
+  max-width: 250px;
+  min-width: 250px;
+  min-height: 100%;
+  border-left: 1px solid #CCC;
+
+  > .bpp-properties-panel {
+    background-color: #FAFAFA;
+  }
+}
+
+.hidden {
+  display: none;
+}
+
+.content {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+
+  #canvas {
+    flex-grow: 1;
+    position: relative;
+  }
+
+  > .message {
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    display: table;
+    font-size: 16px;
+    color: #111;
+
+    .note {
+      vertical-align: middle;
+      text-align: center;
+      display: table-cell;
+    }
+
+    &.error {
+      .details {
+        max-width: 500px;
+        font-size: 12px;
+        margin: 20px auto;
+        text-align: left;
+        color: #BD2828;
+      }
+
+      pre {
+        border: solid 1px #BD2828;
+        background: #fefafa;
+        padding: 10px;
+        color: #BD2828;
+      }
+    }
+  }
+
+  &:not(.with-error) .error,
+  &.with-error .intro,
+  &.with-diagram .intro {
+    display: none;
+  }
+
+  .canvas {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+}
+
+.buttons {
+  display: flex;
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  padding: 0;
+  margin: 0;
+
+  * {
+    margin-right: 10px;
+    height: 40px;
+    text-align: center;
+    line-height: 40px;
+    font-size: 26px;
+  }
+
+  .divider {
+    width: 1px;
+    border-left: 1px solid #DDD;
+  }
+
+  a, button {
+    display: block;
+    width: 40px;
+    padding: 0px;
+    background-color: var(--palette-background-color);
+    border: solid 1px var(--palette-border-color);
+    border-radius: 2px;
+    text-decoration: none;
+    color: var(--palette-entry-color);
+  }
+
+  a:hover, button:hover {
+    color: var(--palette-entry-hover-color);
+    cursor: pointer;
+  }
+
+  .selected {
+    color: var(--palette-entry-selected-color);
+  }
+
+  button {
+    cursor: pointer;
+  }
+}
+
+ul.corner-links {
+  display: block;
+  position: absolute;
+  right: 80px;
+  bottom: 10px;
+  margin: 0;
+  z-index: 100;
+  display: flex;
+  list-style: none;
+  align-items: center;
+
+  > li {
+    margin-left: 10px;
+
+    > a {
+      font-size: 10px;
+      color: #404040;
+    }
+
+    > a.icon-github-circled {
+      font-size: 30px;
+      text-decoration: none;
+    }
+  }
+}
+
+.validation-annotation {
+  position: relative;
+  border-width: 2px;
+  border-color: #FFFFFF;
+  border-style: solid;
+  border-radius: 50%;
+  padding: 2px;
+  width: 20px;
+  height: 20px;
+
+  &:hover > .validation-info {
+    display: block;
+  }
+
+  .validation-info {
+    display: none;
+    position: absolute;
+    top: -2px;
+    left: 6px;
+    list-style: none;
+    padding-left: 0;
+    min-width: 180px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 4;
+
+    li {
+      padding: 4px;
+      border-style: solid;
+      border-width: 2px;
+      border-top-width: 0px;
+    }
+
+    li:first-child {
+      border-top-left-radius: 5px;
+      border-top-right-radius: 5px;
+      border-top-width: 2px;
+    }
+
+    li:last-child {
+      border-bottom-left-radius: 5px;
+      border-bottom-right-radius: 5px;
+    }
+
+    .li-error {
+      background-color: #FDF2F5;
+      border-color: #EC1E0D;
+    }
+
+    .li-warning {
+      background-color: #FFFBD5;
+      border-color: #FB9500;
+    }
+
+    .li-note {
+      background-color: rgb(245, 245, 245);
+      border-color: rgb(132, 140, 148);
+    }
+  }
+
+  .validation-count {
+    position: absolute;
+    font-weight: bold;
+    color: #111111;
+    left: 2px;
+    top: -6px;
+    text-shadow: 1px 1px 1px #FFFFFF, -1px -1px 1px #FFFFFF, 1px -1px 1px #FFFFFF, -1px 1px 1px #FFFFFF;
+  }
+}
+
+.val-error {
+  .validation-annotation;
+  background-color: #EC1E0D;
+}
+
+.val-warning {
+  .validation-annotation;
+  background-color: #FB9500;
+}
+
+.is-dragover {
+  background-color: #eeeeee;
+  opacity: 0.25;
+}
+
+#participants-panel {
+  display: flex;
+  flex-direction: column;
+  
+  .panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #CCC;
+    
+    h3 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .btn-small {
+      padding: 4px 10px;
+      font-size: 16px;
+      line-height: 1;
+      background: #3498db;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+      
+      &:hover {
+        background: #2980b9;
+      }
+    }
+  }
+
+  .participants-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+  }
+
+  .participant-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    margin-bottom: 6px;
+
+    .participant-name {
+      flex: 1;
+      font-size: 13px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      cursor: pointer;
+      
+      &:hover {
+        color: #3498db;
+      }
+    }
+
+    .remove-participant {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      border-radius: 3px;
+      width: 20px;
+      height: 20px;
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &:hover {
+        background: #c0392b;
+      }
+    }
+  }
+
+  .panel-help {
+    padding: 10px;
+    border-top: 1px solid #CCC;
+    color: #666;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+}
+
+#js-generate-chaincode.icon-play::before {
+  font-size: 18px;
+  color: #f39c12;
+}
+
+#js-generate-chaincode.icon-play:hover::before {
+  color: #e67e22;
+}
+
+.msp-empty-state {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 4px;
+  padding: 12px;
+  color: #856404;
+  font-size: 13px;
+  
+  strong {
+    display: block;
+    margin-bottom: 4px;
+  }
+}
+
+.msp-field-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0;
+}
+
+.msp-field-label {
+  flex: 1;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: #2c3e50;
+}
+
+.msp-field-input {
+  flex: 0 0 150px;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 13px;
+  transition: border-color 0.2s;
+  
+  &:focus {
+    outline: none;
+    border-color: #3498db;
+  }
+  
+  &.msp-field-error {
+    border-color: #e74c3c;
+    background: #fdf2f2;
+  }
+}
+
+.msp-status-error {
+  color: #e74c3c;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.msp-status-success {
+  color: #27ae60;
+  font-size: 13px;
+  font-weight: 500;
+  
+  a {
+    color: #2980b9;
+    text-decoration: none;
+    
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.msp-status-loading {
+  color: #7f8c8d;
+  font-size: 13px;
+  font-style: italic;
+}
+
+#msp-modal {
+  .meta-modal-content {
+    h3 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-size: 18px;
+      color: #2c3e50;
+    }
+    
+	h4 {
+      margin: 0 0 8px 0;
+    }
+	
+	details {
+      margin: 0;
+      border: none;
+    }
+
+	
+    > p {
+      margin-bottom: 15px;
+      color: #7f8c8d;
+      font-size: 13px;
+    }
+    
+    #msp-fields {
+      max-height: 300px;
+      overflow-y: auto;
+      padding: 10px;
+      background: #f8f9fa;
+      border-radius: 6px;
+      border: 1px solid #e9ecef;
+      margin-bottom: 15px;
+    }
+    
+    button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: background 0.2s;
+      
+      &#msp-generate {
+        background: #27ae60;
+        color: white;
+        
+        &:hover:not(:disabled) {
+          background: #229954;
+        }
+        
+        &:disabled {
+          background: #95a5a6;
+          cursor: not-allowed;
+        }
+      }
+      
+      &#msp-cancel {
+        background: #ecf0f1;
+        color: #2c3e50;
+        margin-right: 10px;
+        
+        &:hover {
+          background: #bdc3c7;
+        }
+      }
+    }
+    
+    #msp-status {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 4px;
+      background: #f8f9fa;
+      font-size: 13px;
+      min-height: 20px;
+    }
+  }
+}
+
+/* Base modal styles (already in your file, just ensuring consistency) */
+.meta-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.meta-modal.hidden {
+  display: none;
+}
+
+.meta-modal-content {
+  background: #fff;
+  padding: 16px;
+  width: 400px;
+  border-radius: 6px;
+  
+  h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 18px;
+    color: #2c3e50;
+  }
+  
+  h4 {
+    margin: 15px 0 10px;
+    font-size: 14px;
+    color: #34495e;
+  }
+  
+  .modal-description {
+    margin-bottom: 15px;
+    color: #7f8c8d;
+    font-size: 13px;
+  }
+  
+  .modal-actions {
+    margin-top: 10px;
+    display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+    
+    button {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      margin-left: 10px;
+      
+      &#meta-save,
+      &#msp-generate {
+        background: #27ae60;
+        color: white;
+        
+        &:hover:not(:disabled) {
+          background: #229954;
+        }
+      }
+      
+      &#meta-cancel,
+      &#msp-cancel {
+        background: #ecf0f1;
+        color: #2c3e50;
+        
+        &:hover {
+          background: #bdc3c7;
+        }
+      }
+      
+      &:disabled {
+        background: #95a5a6;
+        cursor: not-allowed;
+      }
+    }
+  }
+  
+  #meta-preview {
+    background: #f8f9fa;
+    padding: 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    overflow-x: auto;
+    max-height: 150px;
+  }
+  
+  #msp-fields {
+    margin-bottom: 15px;
+  }
+  
+  #msp-status {
+    margin-top: 10px;
+    font-size: 13px;
+    min-height: 20px;
+  }
+}
+
+#file-input {
+  position: absolute;
+  top: -9999px;
+  left: -9999px;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+
+html, body, #canvas, #canvas > div {
+  height: 100%;
+}
+
+#js-generate-chaincode {
+  background-color: var(--palette-background-color);
+  border: solid 1px var(--palette-border-color);
+  border-radius: 2px;
+  
+  background-image: url('../assets/fabric-logo.png');
+  background-size: 85%;
+  background-repeat: no-repeat;
+  background-position: center;
+  
+  &::before {
+    content: "" !important;
+  }
+  
+  &:hover {
+    color: var(--palette-entry-hover-color);
+    border-color: var(--palette-border-color);
+    cursor: pointer;
+  }
+}

@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: bpmn-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/generated_contracts:/app/generated_contracts
+    environment:
+      - PYTHONUNBUFFERED=1
+    networks:
+      - app-network
+
+  frontend:
+    build: ./frontend
+    container_name: bpmn-editor
+    ports:
+      - "9013:9013"
+    volumes:
+      - ./frontend/app:/app/app
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - API_BASE=http://backend:8000
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

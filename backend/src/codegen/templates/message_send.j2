@@ -1,0 +1,43 @@
+func (cc *SmartContract) {{ message_id }}_Send(ctx contractapi.TransactionContextInterface, instanceID string{% if parameters %}{% for param in parameters %}, {{ param.scoped }} {{ param.go_type }}{% endfor %}{% endif %}) error {
+
+	inst, err := cc.getInstance(ctx, instanceID)
+	if err != nil {
+		return fmt.Errorf("failed to load instance: %v", err)
+	}
+
+
+	msg, ok := inst.Messages["{{ message_id }}"]
+	if !ok {
+		return fmt.Errorf("message {{ message_id }} not found in instance")
+	}
+
+	if msg.State != ENABLED {
+		return fmt.Errorf("message {{ message_id }} is not enabled (current state: %v)", msg.State)
+	}
+
+	clientMSP, err := ctx.GetClientIdentity().GetMSPID()
+	if err != nil {
+		return err
+	}
+	if clientMSP != msg.Sender {
+		return fmt.Errorf("participant %s is not authorized to send message {{ message_id }} (expected sender: %s)",
+			clientMSP, msg.Sender)
+	}
+
+{% if validation_code %}
+{{ validation_code }}
+{% endif %}
+
+{% for param in parameters %}
+	inst.Memory.{{ param.scoped }} = {{ param.scoped }}
+{% endfor %}
+
+	msg.State = WAITING
+	inst.Messages["{{ message_id }}"] = msg
+
+	ctx.GetStub().SetEvent("{{ message_id }}_sent:"+instanceID, []byte("Message sent"))
+
+{{ next_hook }}
+
+	return cc.putInstance(ctx, inst)
+}

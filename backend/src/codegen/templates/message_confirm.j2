@@ -1,0 +1,34 @@
+func (cc *SmartContract) {{ message_id }}_Confirm(ctx contractapi.TransactionContextInterface, instanceID string) error {
+	inst, err := cc.getInstance(ctx, instanceID)
+	if err != nil {
+		return fmt.Errorf("failed to load instance: %v", err)
+	}
+
+	msg, ok := inst.Messages["{{ message_id }}"]
+	if !ok {
+		return fmt.Errorf("message {{ message_id }} not found in instance")
+	}
+
+	if msg.State != WAITING {
+		return fmt.Errorf("message {{ message_id }} is not waiting for confirmation (current state: %v)", msg.State)
+	}
+
+	clientMSP, err := ctx.GetClientIdentity().GetMSPID()
+	if err != nil {
+		return err
+	}
+	if clientMSP != msg.Receiver {
+		return fmt.Errorf("participant %s is not authorized to confirm message {{ message_id }}", clientMSP)
+	}
+
+	msg.State = COMPLETED
+	inst.Messages["{{ message_id }}"] = msg
+
+	ctx.GetStub().SetEvent("{{ message_id }}_confirmed:"+instanceID, []byte("Message confirmed"))
+
+{{ next_state_code }}
+
+{{ next_hook }}
+
+	return cc.putInstance(ctx, inst)
+}
